@@ -1,0 +1,197 @@
+<!doctype html>
+<html>
+<head>
+    <link rel="stylesheet" href="css/estilos.css">
+    <meta charset="utf-8"/>
+    <title>Linkemon</title>
+</head>
+
+<body>
+    <header id="header">
+        <img class="titulo" id="titulo" src="imagenes/titulo.png" alt="titulo">
+        <br>
+        <link rel="icon" href="imagenes/favicon.ico" type="image/x-icon">
+
+    <menu class="menu">
+        <a class="links_menu" href="secciones/tipos.html">Tipos</a>
+        <a class="links_menu" href="secciones/items.html">Items</a>
+        <a class="links_menu" href="secciones/estadisticas.html">Estadisticas</a>
+        <a class="links_menu" href="secciones/evolucion.html">Evolución</a>
+        <a class="links_menu" href="secciones/mecanicas.html">Mecánicas</a>
+    </menu>
+
+    </header>
+<div class="container_des">
+    <div class="descripcion">
+        En esta pagina, encontrareis tanto informacion sobre los diferentes tipos de pokemon como de objetos
+        muy usados en competitivo y estrategias con estos, estadisticas que ya veremos lo que son,
+        formas de evolucionar, y mecanicas que se han visto a lo largo del avance de las generaciones
+        en pokemon.
+    </div>
+    </div>
+
+
+<h2 class="seccion_resumen">RESUMEN DE CONTENIDO </h2>
+
+<div class="container-dual">
+
+    <div class="contain-dual">
+
+    <div class="img-container">
+        <img id="reduccion-img" class="img" src="imagenes/eevee.jpg" alt="tipos">
+    </div>
+
+    <div id="reduccion-text" class="text-container">
+        <h2 class="titulo-resumen">TIPOS</h2>
+        
+        <p class="text">En esta seccion vereis una bonita forma de entender la tabla de tipos de cada tipo, sus debilidades y fortalezas</p>
+    </div>
+
+    </div>
+</div>
+
+<div class="container-dual">
+
+    <div class="contain-dual-inv">
+
+    <div class="text-container-inv">
+        <h2 class="titulo-resumen">ITEMS</h2>
+        
+        <p class="text">En esta seccion vereis cuales son los objetos mas importantes del competitivo</p>
+    </div>
+    <div class="img-container-inv">
+        <img class="img-inv" src="imagenes/Krookodile.png" alt="items">
+    </div>
+    </div>
+    
+</div>
+
+<div class="container-dual">
+    
+    <div class="contain-dual">
+
+    <div class="img-container">
+        <img class="img-main" src="imagenes/infogra.png" alt="estadisticas">
+    </div>
+
+    <div class="text-container">
+        <h2 id="stads-tittle" class="titulo-resumen">ESTADISTICAS</h2>
+        
+        <p class="text">En esta seccion vereis una explicacion de que son las estadisticas en pokemon</p>
+    </div>
+    
+
+</div>
+</div>
+
+<div class="container-dual">
+    
+    <div class="contain-dual-inv">
+
+    <div class="text-container-inv">
+        <h2 class="titulo-resumen">EVOLUCIÓN</h2>
+        
+        <p class="text">En esta seccion vereis los diferentes tipos de evolución en pokemon</p>
+    </div>
+
+    <div class="img-container-inv">
+        <img class="img-inv" src="imagenes/evolucion.webp" alt="Evolución">
+    </div>
+</div>
+</div>
+
+<div class="container-dual">
+    <div class="contain-dual">
+    <div class="img-container">
+        <img class="img-main" src="imagenes/mega.webp" alt="mecánicas">
+    </div>
+    <div class="text-container">
+        <h2 class="titulo-resumen">MECÁNICAS</h2>
+        
+        <p class="text">En esta seccion vereis una explicacion de cuales son las diferentes mecánicas que hay en pokemon</p>
+    </div>
+    
+</div>
+</div>
+
+<footer class="footer">
+    <div class="contacto">
+
+        <input type="checkbox" id="modal-toggle" class="modal-toggle">
+        <label for="modal-toggle" class="open-modal-btn">contacto</label>
+        <div class="modal">
+        <div id="form" class="form-container">
+            <label for="modal-toggle" class="close-modal">&times;</label>
+            <form class="form_estructure">
+                <label class="form_label" for="name">Nombre:</label>
+                <br>
+                <input class="form_input" type="text" id="name" name="name" required>
+                <br><br>
+                <label class="form_label" for="email">Correo Electrónico:</label>
+                <br>
+                <input class="form_input" type="email" id="email" name="email" required>
+                <br><br>
+                <label class="form_label" for="message">Mensaje:</label>
+                <br>
+                <textarea class="form_input" id="message" name="message" rows="4" required></textarea>
+                <br><br>
+                <button type="submit" class="submit">Enviar</button>
+                <br>
+            </form>
+            
+        </div>
+
+        </div>
+        </div>
+        
+        <div class="info-pl">
+            <h2 class="tittle-pl">Legal:</h2>
+            <a class="link-pl" href="secciones/privacidad.html">Privacidad</a>
+            <a class="link-pl" href="secciones/aviso legal.html">Aviso Legal</a>
+        </div>
+        
+        <menu class="secciones">
+            <h2 class="tittle-sec"> Secciones:</h2>
+            <a class="link-sec" href="#titulo">inicio</a>
+            <a class="link-sec" href="secciones/tipos.html">Tipos</a>
+            <a class="link-sec" href="secciones/items.html">Items</a>
+            <a class="link-sec" href="secciones/estadisticas.html">Estadisticas</a>
+            <a class="link-sec" href="secciones/evolucion.html">Evolución</a>
+            <a class="link-sec" href="secciones/mecanicas.html">Mecánicas</a>
+        </menu>
+
+        <div class="copyright">
+            ©Linkemon 2024 Todos Los Derechos Reservados
+        </div>
+
+        <!--Código HTML de la política de cookies -->
+ 
+<!--La URL incluida es la parte que se ha de modificar -->
+ 
+<div class="cookiesms" id="cookie1">
+    Esta web utiliza cookies, puede ver nuestra <a href="secciones/cookies.html"> política de cookies</a>. 
+    Si continúa navegando, está aceptándola.
+    <button onclick="controlcookies()">Aceptar</button>
+    <div  class="cookies2" onmouseover="document.getElementById('cookie1').style.bottom = '0px';">Política de cookies</div>
+    </div>
+    <script type="text/javascript">
+    if (localStorage.controlcookie>0){ 
+    document.getElementById('cookie1').style.bottom = '-50px';
+    }
+    </script>
+     
+    <!-- Fin del código de cookies --->
+
+    <script type="text/javascript">
+        function controlcookies() {
+                 // si variable no existe se crea (al clicar en Aceptar)
+            localStorage.controlcookie = (localStorage.controlcookie || 0);
+         
+            localStorage.controlcookie++; // incrementamos cuenta de la cookie
+            cookie1.style.display='none'; // Esconde la política de cookies
+        }
+        </script>
+</footer>
+
+<script src="scripts/js/funciones.js"></script>
+</body>
