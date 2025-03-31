@@ -1,0 +1,16 @@
+# Obtenemos todos los servicios del sistema
+$servicios = Get-Service 
+
+# Contamos el total de servicios
+$total = $servicios.Count 
+
+# Contamos los servicios que están en estado 'Running'
+$running = ($servicios | Where-Object { $_.Status -eq 'Running' }).Count 
+
+# Contamos los servicios que están en estado 'Stopped'
+$stopped = ($servicios | Where-Object { $_.Status -eq 'Stopped' }).Count 
+
+# Mostramos los resultados de forma clara
+Write-Host "Total de servicios: $total" 
+Write-Host "Servicios en ejecución (Running): $running" 
+Write-Host "Servicios detenidos (Stopped): $stopped"
