@@ -1,0 +1,17 @@
+# Definimos un parámetro que recibe el nombre del programa a ejecutar
+param (
+    [string]$Programa  # Guardamos el nombre del programa en la variable $Programa
+)
+
+# Si no se proporciona un nombre de programa, mostramos un mensaje y salimos
+if (-not $Programa) {
+    Write-Host "Uso: .\sp60ap18nombre.ps1 <nombre_del_programa>"  # Muestra cómo usar el script
+    exit 1  # Salimos con un código de error
+}
+
+# Intentamos ejecutar el programa
+try {
+    Start-Process $Programa -NoNewWindow  # Inicia el programa sin abrir una nueva ventana de consola
+} catch {
+    Write-Host "Error: No se pudo ejecutar '$Programa'. Verifica el nombre e intenta de nuevo."  # Mensaje de error si algo falla
+}
