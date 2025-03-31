@@ -1,0 +1,22 @@
+# Establecer el umbral de memoria en MB
+$umbralMemoria = 200
+
+# Convertir el umbral a bytes (1 MB = 1  1024  1024 bytes)
+$umbralBytes = $umbralMemoria * 1MB
+
+# Obtener todos los procesos en ejecución
+$procesos = Get-Process
+
+# Recorrer cada proceso
+foreach ($proceso in $procesos) {
+    # Comprobar el uso de memoria del proceso
+    if ($proceso.WorkingSet -gt $umbralBytes) {
+        # Mostrar información del proceso que se va a finalizar
+        Write-Host "Finalizando el proceso: $($proceso.Name) (ID: $($proceso.Id)) - Uso de memoria: $([math]::round($proceso.WorkingSet / 1MB, 2)) MB"
+        
+        # Finalizar el proceso
+        Stop-Process -Id $proceso.Id -Force
+    }
+}
+
+Write-Host "Proceso de finalización completado."
