@@ -1,0 +1,30 @@
+#!/bin/bash
+
+# Función para listar servicios según su estado
+listar_servicios() {
+    systemctl list-units --type=service --state=$1
+}
+
+# Mostrar menú
+echo "Seleccione un estado para filtrar los servicios:"
+echo "1) loaded"
+echo "2) not-found"
+echo "3) active"
+echo "4) inactive"
+echo "5) dead"
+echo "6) running"
+echo "7) Salir"
+
+# Leer opción del usuario
+read -p "Ingrese el número de la opción: " opcion
+
+case $opcion in
+    1) listar_servicios loaded ;;
+    2) listar_servicios not-found ;;
+    3) listar_servicios active ;;
+    4) listar_servicios inactive ;;
+    5) listar_servicios dead ;;
+    6) listar_servicios running ;;
+    7) echo "Saliendo..."; exit 0 ;;
+    *) echo "Opción no válida" ;;
+esac
