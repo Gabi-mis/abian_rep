@@ -11,8 +11,14 @@ fi
 # Detectar el namespace automáticamente
 ns=$(xmlstarlet sel -t -v "namespace-uri(/*)" "$XML_FILE")
 
-# Eliminar todos los snapshots (timestamp) del XML
-xmlstarlet ed -N s="$ns" -d "//s:timestamp" "$XML_FILE" > "${XML_FILE}.tmp" && mv "${XML_FILE}.tmp" "$XML_FILE"
+# Contar la cantidad total de snapshots
+total_snapshots=$(xmlstarlet sel -N s="$ns" -t -v "count(//s:timestamp)" "$XML_FILE")
+
+# Si hay más de un snapshot, elimina todos excepto el último
+if [[ "$total_snapshots" -gt 1 ]]; then
+    # Crea un archivo temporal eliminando todos los timestamp menos el último
+    xmlstarlet ed -N s="$ns" $(for (( i=1; i<total_snapshots; i++ )); do echo -n "-d (//s:timestamp)[$i] "; done) "$XML_FILE" > "${XML_FILE}.tmp" && mv "${XML_FILE}.tmp" "$XML_FILE"
+fi
 
 # Función para extraer valores con namespace
 get_value() {
@@ -45,5 +51,25 @@ echo "Fecha del archivo (según sistema de archivos):"
 echo "  Fecha: $real_file_date"
 echo "  Hora:  $real_file_time"
 echo
-echo "No se detectaron snapshots (han sido eliminados previamente)."
+echo "Último snapshot registrado:"
+echo "------------------------------------"
+
+# Obtener los valores del último snapshot (último timestamp)
+date=$(get_value "(//s:timestamp)[last()]/@date")
+time=$(get_value "(//s:timestamp)[last()]/@time")
+
+user=$(get_value "(//s:timestamp)[last()]/s:cpu-load/s:cpu[@number='all']/@user")
+system=$(get_value "(//s:timestamp)[last()]/s:cpu-load/s:cpu[@number='all']/@system")
+nice=$(get_value "(//s:timestamp)[last()]/s:cpu-load/s:cpu[@number='all']/@nice")
+iowait=$(get_value "(//s:timestamp)[last()]/s:cpu-load/s:cpu[@number='all']/@iowait")
+steal=$(get_value "(//s:timestamp)[last()]/s:cpu-load/s:cpu[@number='all']/@steal")
+idle=$(get_value "(//s:timestamp)[last()]/s:cpu-load/s:cpu[@number='all']/@idle")
+
+echo "  Fecha y hora del snapshot: $date $time"
+echo "  User:   $user%"
+echo "  System: $system%"
+echo "  Nice:   $nice%"
+echo "  IOWait: $iowait%"
+echo "  Steal:  $steal%"
+echo "  Idle:   $idle%"
 echo "------------------------------------"
