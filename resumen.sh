@@ -1,29 +1,43 @@
 #!/bin/bash
 
-XML_FILE="/home/abian/abianlog/abian.xml"
+# Directorio donde se guardan los archivos
+LOG_DIR="/home/abian/abianlog"
+BASE_FILE="abian"
+EXT=".xml"
 
-# Verifica si el archivo existe
-if [[ ! -f "$XML_FILE" ]]; then
-    echo "Error: No se encontró el archivo XML en $XML_FILE"
+# Verifica si el directorio existe
+if [[ ! -d "$LOG_DIR" ]]; then
+    echo "Error: El directorio $LOG_DIR no existe."
     exit 1
 fi
 
-# Detectar el namespace automáticamente
-ns=$(xmlstarlet sel -t -v "namespace-uri(/*)" "$XML_FILE")
-
-# Contar la cantidad total de snapshots
-total_snapshots=$(xmlstarlet sel -N s="$ns" -t -v "count(//s:timestamp)" "$XML_FILE")
-
-# Si hay más de un snapshot, elimina todos excepto el último
-if [[ "$total_snapshots" -gt 1 ]]; then
-    # Crea un archivo temporal eliminando todos los timestamp menos el último
-    xmlstarlet ed -N s="$ns" $(for (( i=1; i<total_snapshots; i++ )); do echo -n "-d (//s:timestamp)[$i] "; done) "$XML_FILE" > "${XML_FILE}.tmp" && mv "${XML_FILE}.tmp" "$XML_FILE"
+# Buscar el siguiente número disponible para el archivo
+last_file=$(ls -1 "$LOG_DIR" | grep -oP "${BASE_FILE}\d+${EXT}" | sort -V | tail -n 1)
+if [[ -z "$last_file" ]]; then
+    new_file="${BASE_FILE}1${EXT}"
+else
+    last_number=$(echo "$last_file" | grep -oP "\d+" | tail -n 1)
+    new_number=$((last_number + 1))
+    new_file="${BASE_FILE}${new_number}${EXT}"
 fi
+
+# Crear el nuevo archivo XML con el comando sadf
+sadf -x > "$LOG_DIR/$new_file"
+echo "Nuevo archivo XML creado: $new_file"
+
+# Verifica si el archivo fue creado correctamente
+if [[ ! -f "$LOG_DIR/$new_file" ]]; then
+    echo "Error: No se pudo crear el archivo XML en $LOG_DIR/$new_file"
+    exit 1
+fi
+
+# Detectar el namespace automáticamente del nuevo archivo
+ns=$(xmlstarlet sel -t -v "namespace-uri(/*)" "$LOG_DIR/$new_file")
 
 # Función para extraer valores con namespace
 get_value() {
     path="$1"
-    xmlstarlet sel -N s="$ns" -t -v "$path" -n "$XML_FILE"
+    xmlstarlet sel -N s="$ns" -t -v "$path" -n "$LOG_DIR/$new_file"
 }
 
 # Obtener datos del sistema
@@ -34,8 +48,8 @@ machine=$(get_value "//s:machine")
 num_cpus=$(get_value "//s:number-of-cpus")
 
 # Obtener fecha y hora reales del archivo desde el sistema de archivos
-real_file_date=$(date -r "$XML_FILE" "+%Y-%m-%d")
-real_file_time=$(date -r "$XML_FILE" "+%H:%M:%S")
+real_file_date=$(date -r "$LOG_DIR/$new_file" "+%Y-%m-%d")
+real_file_time=$(date -r "$LOG_DIR/$new_file" "+%H:%M:%S")
 
 # Mostrar encabezado general
 echo "Resumen del registro sysstat:"
