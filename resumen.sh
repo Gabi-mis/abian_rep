@@ -17,13 +17,13 @@ get_value() {
     xmlstarlet sel -N s="$ns" -t -v "$path" -n "$XML_FILE"
 }
 
-# Limpiar variables antes de usarlas
+# Limpiar variables
 cpu_user=""; cpu_system=""; cpu_nice=""
 cpu_iowait=""; cpu_steal=""; cpu_idle=""
 timestamp_date=""; timestamp_time=""
 sysdata_version=""; sysname=""; release=""
 machine=""; num_cpus=""
-file_date=""; file_time=""
+real_file_date=""; real_file_time=""
 
 # Obtener datos del sistema
 sysdata_version=$(get_value "//s:sysdata-version")
@@ -32,23 +32,23 @@ release=$(get_value "//s:release")
 machine=$(get_value "//s:machine")
 num_cpus=$(get_value "//s:number-of-cpus")
 
-# Obtener fecha y hora del archivo
-file_date=$(get_value "//s:file-date")
-file_time=$(get_value "//s:file-utc-time")
+# Obtener fecha y hora reales del archivo desde el sistema de archivos
+real_file_date=$(date -r "$XML_FILE" "+%Y-%m-%d")
+real_file_time=$(date -r "$XML_FILE" "+%H:%M:%S")
 
-# Obtener fecha y hora del primer timestamp
-timestamp_date=$(get_value "//s:timestamp[1]/@date")
-timestamp_time=$(get_value "//s:timestamp[1]/@time")
+# Obtener fecha y hora del ÚLTIMO timestamp
+timestamp_date=$(get_value "(//s:timestamp)[last()]/@date")
+timestamp_time=$(get_value "(//s:timestamp)[last()]/@time")
 
-# Obtener datos de CPU del primer timestamp
-cpu_user=$(get_value "//s:timestamp[1]/s:cpu-load/s:cpu[@number='all']/@user")
-cpu_system=$(get_value "//s:timestamp[1]/s:cpu-load/s:cpu[@number='all']/@system")
-cpu_nice=$(get_value "//s:timestamp[1]/s:cpu-load/s:cpu[@number='all']/@nice")
-cpu_iowait=$(get_value "//s:timestamp[1]/s:cpu-load/s:cpu[@number='all']/@iowait")
-cpu_steal=$(get_value "//s:timestamp[1]/s:cpu-load/s:cpu[@number='all']/@steal")
-cpu_idle=$(get_value "//s:timestamp[1]/s:cpu-load/s:cpu[@number='all']/@idle")
+# Obtener datos de CPU del último snapshot
+cpu_user=$(get_value "(//s:timestamp)[last()]/s:cpu-load/s:cpu[@number='all']/@user")
+cpu_system=$(get_value "(//s:timestamp)[last()]/s:cpu-load/s:cpu[@number='all']/@system")
+cpu_nice=$(get_value "(//s:timestamp)[last()]/s:cpu-load/s:cpu[@number='all']/@nice")
+cpu_iowait=$(get_value "(//s:timestamp)[last()]/s:cpu-load/s:cpu[@number='all']/@iowait")
+cpu_steal=$(get_value "(//s:timestamp)[last()]/s:cpu-load/s:cpu[@number='all']/@steal")
+cpu_idle=$(get_value "(//s:timestamp)[last()]/s:cpu-load/s:cpu[@number='all']/@idle")
 
-# Mostrar resumen del primer registro
+# Mostrar resumen
 echo "Resumen del registro sysstat:"
 echo "------------------------------------"
 echo "Versión y sistema:"
@@ -58,15 +58,15 @@ echo "  Kernel:            $release"
 echo "  Arquitectura:      $machine"
 echo "  Núcleos de CPU:    $num_cpus"
 echo
-echo "Fecha del archivo:"
-echo "  Fecha: $file_date"
-echo "  Hora UTC: $file_time"
+echo "Fecha del archivo (según sistema de archivos):"
+echo "  Fecha: $real_file_date"
+echo "  Hora:  $real_file_time"
 echo
-echo "Fecha del registro (timestamp):"
+echo "Fecha del último registro (timestamp):"
 echo "  Fecha: $timestamp_date"
 echo "  Hora UTC: $timestamp_time"
 echo
-echo "Uso de CPU del snapshot:"
+echo "Uso de CPU del último snapshot:"
 echo "  User:   $cpu_user%"
 echo "  System: $cpu_system%"
 echo "  Nice:   $cpu_nice%"
