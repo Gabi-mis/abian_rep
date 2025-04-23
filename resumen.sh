@@ -49,13 +49,6 @@ get_value() {
     xmlstarlet sel -N s="$ns" -t -v "$path" -n "$LOG_DIR/$new_file"
 }
 
-# Obtener datos del sistema
-sysdata_version=$(get_value "//s:sysdata-version")
-sysname=$(get_value "//s:sysname")
-release=$(get_value "//s:release")
-machine=$(get_value "//s:machine")
-num_cpus=$(get_value "//s:number-of-cpus")
-
 # Obtener fecha y hora reales del archivo desde el sistema de archivos
 real_file_date=$(date -r "$LOG_DIR/$new_file" "+%Y-%m-%d")
 real_file_time=$(date -r "$LOG_DIR/$new_file" "+%H:%M:%S")
@@ -63,32 +56,31 @@ real_file_time=$(date -r "$LOG_DIR/$new_file" "+%H:%M:%S")
 # Mostrar encabezado general
 echo "Resumen del registro sysstat:"
 echo "------------------------------------"
-echo "Versión y sistema:"
-echo "  sysstat version:   $sysdata_version"
-echo "  Sistema operativo: $sysname"
-echo "  Kernel:            $release"
-echo "  Arquitectura:      $machine"
-echo "  Núcleos de CPU:    $num_cpus"
-echo
 echo "Fecha del archivo (según sistema de archivos):"
 echo "  Fecha: $real_file_date"
 echo "  Hora:  $real_file_time"
 echo
+
+# Obtener el timestamp que coincide con la fecha y hora del archivo
+timestamp=$(get_value "(//s:timestamp[s@date='$real_file_date' and s@time='$real_file_time'])[1]")
+
+if [[ -z "$timestamp" ]]; then
+    echo "Error: No se encontró un timestamp correspondiente a la fecha y hora del archivo."
+    exit 1
+fi
+
+# Extraer los valores de CPU de ese timestamp
+user=$(echo "$timestamp" | xmlstarlet sel -N s="$ns" -t -v "s:cpu-load/s:cpu[@number='all']/@user")
+system=$(echo "$timestamp" | xmlstarlet sel -N s="$ns" -t -v "s:cpu-load/s:cpu[@number='all']/@system")
+nice=$(echo "$timestamp" | xmlstarlet sel -N s="$ns" -t -v "s:cpu-load/s:cpu[@number='all']/@nice")
+iowait=$(echo "$timestamp" | xmlstarlet sel -N s="$ns" -t -v "s:cpu-load/s:cpu[@number='all']/@iowait")
+steal=$(echo "$timestamp" | xmlstarlet sel -N s="$ns" -t -v "s:cpu-load/s:cpu[@number='all']/@steal")
+idle=$(echo "$timestamp" | xmlstarlet sel -N s="$ns" -t -v "s:cpu-load/s:cpu[@number='all']/@idle")
+
+# Mostrar el resumen de este snapshot
 echo "Último snapshot registrado:"
 echo "------------------------------------"
-
-# Obtener los valores del último snapshot (último timestamp)
-date=$(get_value "(//s:timestamp)[last()]/@date")
-time=$(get_value "(//s:timestamp)[last()]/@time")
-
-user=$(get_value "(//s:timestamp)[last()]/s:cpu-load/s:cpu[@number='all']/@user")
-system=$(get_value "(//s:timestamp)[last()]/s:cpu-load/s:cpu[@number='all']/@system")
-nice=$(get_value "(//s:timestamp)[last()]/s:cpu-load/s:cpu[@number='all']/@nice")
-iowait=$(get_value "(//s:timestamp)[last()]/s:cpu-load/s:cpu[@number='all']/@iowait")
-steal=$(get_value "(//s:timestamp)[last()]/s:cpu-load/s:cpu[@number='all']/@steal")
-idle=$(get_value "(//s:timestamp)[last()]/s:cpu-load/s:cpu[@number='all']/@idle")
-
-echo "  Fecha y hora del snapshot: $date $time"
+echo "  Fecha y hora del snapshot: $real_file_date $real_file_time"
 echo "  User:   $user%"
 echo "  System: $system%"
 echo "  Nice:   $nice%"
