@@ -41,32 +41,31 @@ echo
 # Extraer y ordenar los registros de timestamp
 timestamps=$(xmlstarlet sel -N s="$ns" -t -m "//s:timestamp" -v "@date" -o " " -v "@time" -n "$new_file" | sort)
 
-# Obtener los últimos 5 timestamps (los más recientes)
-last_5_timestamps=$(echo "$timestamps" | tail -n 5)
+# Obtener el último timestamp (el más reciente)
+last_timestamp=$(echo "$timestamps" | tail -n 1)
 
-# Mostrar los últimos 5 timestamps
-echo "Últimos 5 registros (timestamps):"
-echo "$last_5_timestamps"
+# Mostrar el último timestamp
+echo "Último registro (timestamp):"
+echo "$last_timestamp"
 echo
 
-# Mostrar la información de CPU de los últimos 5 timestamps
-for timestamp in $last_5_timestamps; do
-    timestamp_date=$(echo "$timestamp" | awk '{print $1}')
-    timestamp_time=$(echo "$timestamp" | awk '{print $2}')
-    
-    echo "Uso de CPU para el timestamp $timestamp_date $timestamp_time:"
-    cpu_user=$(get_value "//s:timestamp[@date='$timestamp_date' and @time='$timestamp_time']/s:cpu-load/s:cpu[@number='all']/@user")
-    cpu_system=$(get_value "//s:timestamp[@date='$timestamp_date' and @time='$timestamp_time']/s:cpu-load/s:cpu[@number='all']/@system")
-    cpu_nice=$(get_value "//s:timestamp[@date='$timestamp_date' and @time='$timestamp_time']/s:cpu-load/s:cpu[@number='all']/@nice")
-    cpu_iowait=$(get_value "//s:timestamp[@date='$timestamp_date' and @time='$timestamp_time']/s:cpu-load/s:cpu[@number='all']/@iowait")
-    cpu_steal=$(get_value "//s:timestamp[@date='$timestamp_date' and @time='$timestamp_time']/s:cpu-load/s:cpu[@number='all']/@steal")
-    cpu_idle=$(get_value "//s:timestamp[@date='$timestamp_date' and @time='$timestamp_time']/s:cpu-load/s:cpu[@number='all']/@idle")
+# Extraer la fecha y hora del último timestamp
+timestamp_date=$(echo "$last_timestamp" | awk '{print $1}')
+timestamp_time=$(echo "$last_timestamp" | awk '{print $2}')
 
-    echo "  User:   $cpu_user%"
-    echo "  System: $cpu_system%"
-    echo "  Nice:   $cpu_nice%"
-    echo "  IOWait: $cpu_iowait%"
-    echo "  Steal:  $cpu_steal%"
-    echo "  Idle:   $cpu_idle%"
-    echo "------------------------------------"
-done
+# Mostrar la información de CPU del último timestamp
+echo "Uso de CPU para el timestamp $timestamp_date $timestamp_time:"
+cpu_user=$(get_value "//s:timestamp[@date='$timestamp_date' and @time='$timestamp_time']/s:cpu-load/s:cpu[@number='all']/@user")
+cpu_system=$(get_value "//s:timestamp[@date='$timestamp_date' and @time='$timestamp_time']/s:cpu-load/s:cpu[@number='all']/@system")
+cpu_nice=$(get_value "//s:timestamp[@date='$timestamp_date' and @time='$timestamp_time']/s:cpu-load/s:cpu[@number='all']/@nice")
+cpu_iowait=$(get_value "//s:timestamp[@date='$timestamp_date' and @time='$timestamp_time']/s:cpu-load/s:cpu[@number='all']/@iowait")
+cpu_steal=$(get_value "//s:timestamp[@date='$timestamp_date' and @time='$timestamp_time']/s:cpu-load/s:cpu[@number='all']/@steal")
+cpu_idle=$(get_value "//s:timestamp[@date='$timestamp_date' and @time='$timestamp_time']/s:cpu-load/s:cpu[@number='all']/@idle")
+
+echo "  User:   $cpu_user%"
+echo "  System: $cpu_system%"
+echo "  Nice:   $cpu_nice%"
+echo "  IOWait: $cpu_iowait%"
+echo "  Steal:  $cpu_steal%"
+echo "  Idle:   $cpu_idle%"
+echo "------------------------------------"
