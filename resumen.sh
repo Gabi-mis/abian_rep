@@ -21,6 +21,15 @@ else
     new_file="${BASE_FILE}${new_number}${EXT}"
 fi
 
+# Eliminar archivos anteriores excepto el último
+if [[ -n "$last_file" ]]; then
+    echo "Eliminando archivos antiguos..."
+    for file in $(ls -1 "$LOG_DIR" | grep -oP "${BASE_FILE}\d+${EXT}" | sort -V | head -n -1); do
+        rm "$LOG_DIR/$file"
+        echo "Archivo eliminado: $file"
+    done
+fi
+
 # Crear el nuevo archivo XML con el comando sadf
 sadf -x > "$LOG_DIR/$new_file"
 echo "Nuevo archivo XML creado: $new_file"
