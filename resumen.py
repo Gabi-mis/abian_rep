@@ -1,27 +1,36 @@
 #!/bin/bash
 
-# Ruta al archivo XML generado por sadf -x
+# Ruta al archivo XML
 XML_FILE="/home/abian/abianlog/abian.xml"
 
-# Verificar si el archivo existe
+# Verificación
 if [[ ! -f "$XML_FILE" ]]; then
     echo "Error: No se encontró el archivo XML en $XML_FILE"
     exit 1
 fi
 
-# Extraer información de CPU
-cpu_user=$(xmllint --xpath "string(//cpu[@number='all']/@user)" "$XML_FILE")
-cpu_system=$(xmllint --xpath "string(//cpu[@number='all']/@system)" "$XML_FILE")
-cpu_iowait=$(xmllint --xpath "string(//cpu[@number='all']/@iowait)" "$XML_FILE")
-cpu_idle=$(xmllint --xpath "string(//cpu[@number='all']/@idle)" "$XML_FILE")
-cpu_nice=$(xmllint --xpath "string(//cpu[@number='all']/@nice)" "$XML_FILE")
-cpu_steal=$(xmllint --xpath "string(//cpu[@number='all']/@steal)" "$XML_FILE")
+# Prefijo del namespace que declararemos como "s"
+ns="https://sysstat.github.io"
 
-# Fecha y hora del registro
-timestamp_date=$(xmllint --xpath "string(//timestamp/@date)" "$XML_FILE")
-timestamp_time=$(xmllint --xpath "string(//timestamp/@time)" "$XML_FILE")
+# Función para obtener valores XML con namespace
+get_value() {
+    xpath="$1"
+    xmllint --xpath "string($xpath)" --xpath "declare namespace s='$ns'; $xpath" "$XML_FILE" 2>/dev/null
+}
 
-# Mostrar los datos
+# Extraer datos de CPU con prefijo de espacio de nombres
+cpu_user=$(get_value "//s:cpu[@number='all']/@user")
+cpu_system=$(get_value "//s:cpu[@number='all']/@system")
+cpu_iowait=$(get_value "//s:cpu[@number='all']/@iowait")
+cpu_idle=$(get_value "//s:cpu[@number='all']/@idle")
+cpu_nice=$(get_value "//s:cpu[@number='all']/@nice")
+cpu_steal=$(get_value "//s:cpu[@number='all']/@steal")
+
+# Fecha y hora
+timestamp_date=$(get_value "//s:timestamp/@date")
+timestamp_time=$(get_value "//s:timestamp/@time")
+
+# Mostrar resultados
 echo "Resumen del registro sysstat:"
 echo "------------------------------------"
 echo "Fecha del registro: $timestamp_date $timestamp_time"
