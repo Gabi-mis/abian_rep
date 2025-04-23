@@ -8,10 +8,10 @@ if [[ ! -f "$XML_FILE" ]]; then
     exit 1
 fi
 
-# Namespace que usa el XML
-ns="https://sysstat.github.io"
+# Extraer automáticamente el namespace del documento (xmlns en el nodo raíz)
+ns=$(xmlstarlet sel -t -v "namespace-uri(/*)" "$XML_FILE")
 
-# Función auxiliar para extraer valores con namespace
+# Función auxiliar para extraer valores usando namespace detectado
 get_value() {
     path="$1"
     xmlstarlet sel -N s="$ns" -t -v "$path" -n "$XML_FILE"
