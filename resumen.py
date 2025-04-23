@@ -17,7 +17,20 @@ get_value() {
     xmlstarlet sel -N s="$ns" -t -v "$path" -n "$XML_FILE"
 }
 
-# Extraer valores de CPU
+# ----- Datos del sistema -----
+sysdata_version=$(get_value "//s:sysdata-version")
+sysname=$(get_value "//s:sysname")
+release=$(get_value "//s:release")
+machine=$(get_value "//s:machine")
+num_cpus=$(get_value "//s:number-of-cpus")
+
+# ----- Fecha y hora del archivo -----
+file_date=$(get_value "//s:file-date")
+file_time=$(get_value "//s:file-utc-time")
+timestamp_date=$(get_value "//s:timestamp/@date")
+timestamp_time=$(get_value "//s:timestamp/@time")
+
+# ----- Uso de CPU -----
 cpu_user=$(get_value "//s:cpu[@number='all']/@user")
 cpu_system=$(get_value "//s:cpu[@number='all']/@system")
 cpu_nice=$(get_value "//s:cpu[@number='all']/@nice")
@@ -25,14 +38,20 @@ cpu_iowait=$(get_value "//s:cpu[@number='all']/@iowait")
 cpu_steal=$(get_value "//s:cpu[@number='all']/@steal")
 cpu_idle=$(get_value "//s:cpu[@number='all']/@idle")
 
-# Extraer fecha y hora
-timestamp_date=$(get_value "//s:timestamp/@date")
-timestamp_time=$(get_value "//s:timestamp/@time")
-
-# Mostrar resumen
+# ----- Mostrar resumen -----
 echo "Resumen del registro sysstat:"
 echo "------------------------------------"
-echo "Fecha del registro: $timestamp_date $timestamp_time"
+echo "Versión y sistema:"
+echo "  sysstat version:  $sysdata_version"
+echo "  Sistema operativo: $sysname"
+echo "  Kernel:           $release"
+echo "  Arquitectura:     $machine"
+echo "  Núcleos de CPU:   $num_cpus"
+echo
+echo "Fecha del archivo:"
+echo "  Fecha de registro:     $file_date"
+echo "  Hora UTC del registro: $file_time"
+echo "  Timestamp del snapshot: $timestamp_date $timestamp_time"
 echo
 echo "Uso de CPU:"
 echo "  User:   $cpu_user%"
