@@ -15,10 +15,12 @@ fi
 last_file=$(ls -1 "$LOG_DIR" | grep -oP "${BASE_FILE}\d+${EXT}" | sort -V | tail -n 1)
 if [[ -z "$last_file" ]]; then
     new_file="${BASE_FILE}1${EXT}"
+    new_id=1
 else
     last_number=$(echo "$last_file" | grep -oP "\d+" | tail -n 1)
     new_number=$((last_number + 1))
     new_file="${BASE_FILE}${new_number}${EXT}"
+    new_id=$new_number
 fi
 
 # Eliminar archivos anteriores excepto el último
@@ -49,38 +51,29 @@ get_value() {
     xmlstarlet sel -N s="$ns" -t -v "$path" -n "$LOG_DIR/$new_file"
 }
 
-# Obtener fecha y hora reales del archivo desde el sistema de archivos
-real_file_date=$(date -r "$LOG_DIR/$new_file" "+%Y-%m-%d")
-real_file_time=$(date -r "$LOG_DIR/$new_file" "+%H:%M:%S")
-
 # Mostrar encabezado general
 echo "Resumen del registro sysstat:"
 echo "------------------------------------"
 echo "Fecha del archivo (según sistema de archivos):"
-echo "  Fecha: $real_file_date"
-echo "  Hora:  $real_file_time"
+echo "  Fecha: $(date -r "$LOG_DIR/$new_file" "+%Y-%m-%d")"
+echo "  Hora:  $(date -r "$LOG_DIR/$new_file" "+%H:%M:%S")"
 echo
 
-# Obtener el timestamp que coincide con la fecha y hora del archivo
-timestamp=$(get_value "(//s:timestamp[s@date='$real_file_date' and s@time='$real_file_time'])[1]")
+# Obtener el último timestamp del archivo recién creado (basado en el ID)
+timestamp_id=$(xmlstarlet sel -N s="$ns" -t -m "//s:timestamp" -v "s@id" -n "$LOG_DIR/$new_file" | tail -n 1)
 
-if [[ -z "$timestamp" ]]; then
-    echo "Error: No se encontró un timestamp correspondiente a la fecha y hora del archivo."
-    exit 1
-fi
-
-# Extraer los valores de CPU de ese timestamp
-user=$(echo "$timestamp" | xmlstarlet sel -N s="$ns" -t -v "s:cpu-load/s:cpu[@number='all']/@user")
-system=$(echo "$timestamp" | xmlstarlet sel -N s="$ns" -t -v "s:cpu-load/s:cpu[@number='all']/@system")
-nice=$(echo "$timestamp" | xmlstarlet sel -N s="$ns" -t -v "s:cpu-load/s:cpu[@number='all']/@nice")
-iowait=$(echo "$timestamp" | xmlstarlet sel -N s="$ns" -t -v "s:cpu-load/s:cpu[@number='all']/@iowait")
-steal=$(echo "$timestamp" | xmlstarlet sel -N s="$ns" -t -v "s:cpu-load/s:cpu[@number='all']/@steal")
-idle=$(echo "$timestamp" | xmlstarlet sel -N s="$ns" -t -v "s:cpu-load/s:cpu[@number='all']/@idle")
+# Extraer los valores de CPU de ese timestamp específico
+user=$(xmlstarlet sel -N s="$ns" -t -v "//s:timestamp[s@id='$timestamp_id']/s:cpu-load/s:cpu[@number='all']/@user" "$LOG_DIR/$new_file")
+system=$(xmlstarlet sel -N s="$ns" -t -v "//s:timestamp[s@id='$timestamp_id']/s:cpu-load/s:cpu[@number='all']/@system" "$LOG_DIR/$new_file")
+nice=$(xmlstarlet sel -N s="$ns" -t -v "//s:timestamp[s@id='$timestamp_id']/s:cpu-load/s:cpu[@number='all']/@nice" "$LOG_DIR/$new_file")
+iowait=$(xmlstarlet sel -N s="$ns" -t -v "//s:timestamp[s@id='$timestamp_id']/s:cpu-load/s:cpu[@number='all']/@iowait" "$LOG_DIR/$new_file")
+steal=$(xmlstarlet sel -N s="$ns" -t -v "//s:timestamp[s@id='$timestamp_id']/s:cpu-load/s:cpu[@number='all']/@steal" "$LOG_DIR/$new_file")
+idle=$(xmlstarlet sel -N s="$ns" -t -v "//s:timestamp[s@id='$timestamp_id']/s:cpu-load/s:cpu[@number='all']/@idle" "$LOG_DIR/$new_file")
 
 # Mostrar el resumen de este snapshot
 echo "Último snapshot registrado:"
 echo "------------------------------------"
-echo "  Fecha y hora del snapshot: $real_file_date $real_file_time"
+echo "  ID del timestamp: $timestamp_id"
 echo "  User:   $user%"
 echo "  System: $system%"
 echo "  Nice:   $nice%"
