@@ -41,19 +41,19 @@ echo
 # Extraer y ordenar los registros de timestamp
 timestamps=$(xmlstarlet sel -N s="$ns" -t -m "//s:timestamp" -v "@date" -o " " -v "@time" -n "$new_file" | sort)
 
-# Obtener el primer timestamp (el más antiguo)
-first_timestamp=$(echo "$timestamps" | head -n 1)
+# Obtener el último timestamp (el más reciente)
+last_timestamp=$(echo "$timestamps" | tail -n 1)
 
-# Mostrar el primer timestamp
-echo "Primer registro (timestamp):"
-echo "$first_timestamp"
+# Mostrar el último timestamp
+echo "Último registro (timestamp):"
+echo "$last_timestamp"
 echo
 
-# Extraer la fecha y hora del primer timestamp
-timestamp_date=$(echo "$first_timestamp" | awk '{print $1}')
-timestamp_time=$(echo "$first_timestamp" | awk '{print $2}')
+# Extraer la fecha y hora del último timestamp
+timestamp_date=$(echo "$last_timestamp" | awk '{print $1}')
+timestamp_time=$(echo "$last_timestamp" | awk '{print $2}')
 
-# Mostrar la información de CPU del primer timestamp
+# Mostrar la información de CPU del último timestamp
 echo "Uso de CPU para el timestamp $timestamp_date $timestamp_time:"
 cpu_user=$(get_value "//s:timestamp[@date='$timestamp_date' and @time='$timestamp_time']/s:cpu-load/s:cpu[@number='all']/@user")
 cpu_system=$(get_value "//s:timestamp[@date='$timestamp_date' and @time='$timestamp_time']/s:cpu-load/s:cpu[@number='all']/@system")
