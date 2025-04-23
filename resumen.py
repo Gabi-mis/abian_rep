@@ -1,48 +1,36 @@
-import xml.etree.ElementTree as ET
+#!/bin/bash
 
-def resumir_sadf(xml_path="/home/abian/abianlog/abian.xml"):
-    tree = ET.parse(xml_path)
-    root = tree.getroot()
+# Ruta al archivo XML generado por sadf -x
+XML_FILE="/home/abian/abianlog/abian.xml"
 
-    host = root.find(".//host")
-    hostname = host.attrib.get("nodename", "Desconocido")
-    sysname = host.findtext("sysname", "Linux")
-    release = host.findtext("release", "Desconocido")
-    cpu_count = host.findtext("number-of-cpus", "N/A")
-    file_date = host.findtext("file-date", "N/A")
-    boot = host.find("restarts/boot")
-    boot_time = f"{boot.attrib.get('date')} {boot.attrib.get('time')} UTC"
+# Verificar si el archivo existe
+if [[ ! -f "$XML_FILE" ]]; then
+    echo "Error: No se encontró el archivo XML en $XML_FILE"
+    exit 1
+fi
 
-    # Extraer estadísticas de CPU
-    timestamp = host.find(".//statistics/timestamp")
-    cpu_data = timestamp.find(".//cpu")
-    time = timestamp.attrib.get("time", "Desconocido")
+# Extraer información de CPU
+cpu_user=$(xmllint --xpath "string(//cpu[@number='all']/@user)" "$XML_FILE")
+cpu_system=$(xmllint --xpath "string(//cpu[@number='all']/@system)" "$XML_FILE")
+cpu_iowait=$(xmllint --xpath "string(//cpu[@number='all']/@iowait)" "$XML_FILE")
+cpu_idle=$(xmllint --xpath "string(//cpu[@number='all']/@idle)" "$XML_FILE")
+cpu_nice=$(xmllint --xpath "string(//cpu[@number='all']/@nice)" "$XML_FILE")
+cpu_steal=$(xmllint --xpath "string(//cpu[@number='all']/@steal)" "$XML_FILE")
 
-    usage = {
-        "user": float(cpu_data.attrib.get("user", 0.0)),
-        "system": float(cpu_data.attrib.get("system", 0.0)),
-        "iowait": float(cpu_data.attrib.get("iowait", 0.0)),
-        "idle": float(cpu_data.attrib.get("idle", 0.0)),
-    }
+# Fecha y hora del registro
+timestamp_date=$(xmllint --xpath "string(//timestamp/@date)" "$XML_FILE")
+timestamp_time=$(xmllint --xpath "string(//timestamp/@time)" "$XML_FILE")
 
-    resumen = f"""
-🖥️ Resumen del sistema: {hostname}
--------------------------------------
-📅 Fecha del informe: {file_date} a las {time} UTC
-🔁 Último reinicio: {boot_time}
-💻 Sistema operativo: {sysname} {release}
-🧠 Núcleos de CPU: {cpu_count}
-
-🔍 Uso de CPU:
-- Uso por el usuario: {usage['user']}%
-- Uso por el sistema: {usage['system']}%
-- Espera de disco (iowait): {usage['iowait']}%
-- Inactividad (idle): {usage['idle']}%
-
-⚙️ Carga total estimada de CPU: {100 - usage['idle']:.2f}%
-"""
-    return resumen
-
-# Ejemplo de uso
-if __name__ == "__main__":
-    print(resumir_sadf())
+# Mostrar los datos
+echo "Resumen del registro sysstat:"
+echo "------------------------------------"
+echo "Fecha del registro: $timestamp_date $timestamp_time"
+echo
+echo "Uso de CPU:"
+echo "  User:   $cpu_user%"
+echo "  System: $cpu_system%"
+echo "  Nice:   $cpu_nice%"
+echo "  IOWait: $cpu_iowait%"
+echo "  Steal:  $cpu_steal%"
+echo "  Idle:   $cpu_idle%"
+echo "------------------------------------"
