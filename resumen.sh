@@ -11,73 +11,47 @@ if [[ ! -d "$LOG_DIR" ]]; then
     exit 1
 fi
 
-# Buscar el siguiente número disponible para el archivo
-last_file=$(ls -1 "$LOG_DIR" | grep -oP "${BASE_FILE}\d+${EXT}" | sort -V | tail -n 1)
-if [[ -z "$last_file" ]]; then
-    new_file="${BASE_FILE}1${EXT}"
-    new_id=1
-else
-    last_number=$(echo "$last_file" | grep -oP "\d+" | tail -n 1)
-    new_number=$((last_number + 1))
-    new_file="${BASE_FILE}${new_number}${EXT}"
-    new_id=$new_number
-fi
-
-# Eliminar archivos anteriores excepto el último
-if [[ -n "$last_file" ]]; then
-    echo "Eliminando archivos antiguos..."
-    for file in $(ls -1 "$LOG_DIR" | grep -oP "${BASE_FILE}\d+${EXT}" | sort -V | head -n -1); do
-        rm "$LOG_DIR/$file"
-        echo "Archivo eliminado: $file"
-    done
-fi
-
 # Crear el nuevo archivo XML con el comando sadf
-sadf -x > "$LOG_DIR/$new_file"
-echo "Nuevo archivo XML creado: $new_file"
+sadf -x > "$LOG_DIR/$BASE_FILE.xml"
 
 # Verifica si el archivo fue creado correctamente
-if [[ ! -f "$LOG_DIR/$new_file" ]]; then
-    echo "Error: No se pudo crear el archivo XML en $LOG_DIR/$new_file"
+new_file="$LOG_DIR/$BASE_FILE.xml"
+if [[ ! -f "$new_file" ]]; then
+    echo "Error: No se pudo crear el archivo XML en $new_file"
     exit 1
 fi
 
 # Detectar el namespace automáticamente del nuevo archivo
-ns=$(xmlstarlet sel -t -v "namespace-uri(/*)" "$LOG_DIR/$new_file")
+ns=$(xmlstarlet sel -t -v "namespace-uri(/*)" "$new_file")
 
 # Función para extraer valores con namespace
 get_value() {
     path="$1"
-    xmlstarlet sel -N s="$ns" -t -v "$path" -n "$LOG_DIR/$new_file"
+    xmlstarlet sel -N s="$ns" -t -v "$path" -n "$new_file"
 }
 
 # Mostrar encabezado general
 echo "Resumen del registro sysstat:"
 echo "------------------------------------"
 echo "Fecha del archivo (según sistema de archivos):"
-echo "  Fecha: $(date -r "$LOG_DIR/$new_file" "+%Y-%m-%d")"
-echo "  Hora:  $(date -r "$LOG_DIR/$new_file" "+%H:%M:%S")"
+echo "  Fecha: $(date -r "$new_file" "+%Y-%m-%d")"
+echo "  Hora:  $(date -r "$new_file" "+%H:%M:%S")"
 echo
 
-# Obtener el último timestamp del archivo recién creado (basado en el ID)
-timestamp_id=$(xmlstarlet sel -N s="$ns" -t -m "//s:timestamp" -v "s@id" -n "$LOG_DIR/$new_file" | tail -n 1)
+# Extraer los valores de CPU de todo el archivo
+cpu_user=$(get_value "//s:cpu-load/s:cpu[@number='all']/@user")
+cpu_system=$(get_value "//s:cpu-load/s:cpu[@number='all']/@system")
+cpu_nice=$(get_value "//s:cpu-load/s:cpu[@number='all']/@nice")
+cpu_iowait=$(get_value "//s:cpu-load/s:cpu[@number='all']/@iowait")
+cpu_steal=$(get_value "//s:cpu-load/s:cpu[@number='all']/@steal")
+cpu_idle=$(get_value "//s:cpu-load/s:cpu[@number='all']/@idle")
 
-# Extraer los valores de CPU de ese timestamp específico
-user=$(xmlstarlet sel -N s="$ns" -t -v "//s:timestamp[s@id='$timestamp_id']/s:cpu-load/s:cpu[@number='all']/@user" "$LOG_DIR/$new_file")
-system=$(xmlstarlet sel -N s="$ns" -t -v "//s:timestamp[s@id='$timestamp_id']/s:cpu-load/s:cpu[@number='all']/@system" "$LOG_DIR/$new_file")
-nice=$(xmlstarlet sel -N s="$ns" -t -v "//s:timestamp[s@id='$timestamp_id']/s:cpu-load/s:cpu[@number='all']/@nice" "$LOG_DIR/$new_file")
-iowait=$(xmlstarlet sel -N s="$ns" -t -v "//s:timestamp[s@id='$timestamp_id']/s:cpu-load/s:cpu[@number='all']/@iowait" "$LOG_DIR/$new_file")
-steal=$(xmlstarlet sel -N s="$ns" -t -v "//s:timestamp[s@id='$timestamp_id']/s:cpu-load/s:cpu[@number='all']/@steal" "$LOG_DIR/$new_file")
-idle=$(xmlstarlet sel -N s="$ns" -t -v "//s:timestamp[s@id='$timestamp_id']/s:cpu-load/s:cpu[@number='all']/@idle" "$LOG_DIR/$new_file")
-
-# Mostrar el resumen de este snapshot
-echo "Último snapshot registrado:"
-echo "------------------------------------"
-echo "  ID del timestamp: $timestamp_id"
-echo "  User:   $user%"
-echo "  System: $system%"
-echo "  Nice:   $nice%"
-echo "  IOWait: $iowait%"
-echo "  Steal:  $steal%"
-echo "  Idle:   $idle%"
+# Mostrar el resumen de la CPU
+echo "Uso de CPU:"
+echo "  User:   $cpu_user%"
+echo "  System: $cpu_system%"
+echo "  Nice:   $cpu_nice%"
+echo "  IOWait: $cpu_iowait%"
+echo "  Steal:  $cpu_steal%"
+echo "  Idle:   $cpu_idle%"
 echo "------------------------------------"
