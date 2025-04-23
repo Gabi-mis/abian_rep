@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Nuevo directorio donde se guardan los archivos
-LOG_DIR="/home/abian/archivos"
+# Directorio donde se encuentran los archivos XML
+LOG_DIR="/home/abian/abian_log"
 BASE_FILE="abian"
 EXT=".xml"
 
@@ -11,17 +11,16 @@ if [[ ! -d "$LOG_DIR" ]]; then
     exit 1
 fi
 
-# Crear el nuevo archivo XML con el comando sadf
-sadf -x > "$LOG_DIR/$BASE_FILE.xml"
+# Buscar el archivo XML más reciente en el directorio
+new_file=$(ls -t "$LOG_DIR/$BASE_FILE"*"$EXT" | head -n 1)
 
-# Verifica si el archivo fue creado correctamente
-new_file="$LOG_DIR/$BASE_FILE.xml"
+# Verifica si se encontró un archivo XML
 if [[ ! -f "$new_file" ]]; then
-    echo "Error: No se pudo crear el archivo XML en $new_file"
+    echo "Error: No se encontró ningún archivo XML en $LOG_DIR."
     exit 1
 fi
 
-# Detectar el namespace automáticamente del nuevo archivo
+# Detectar el namespace automáticamente del archivo
 ns=$(xmlstarlet sel -t -v "namespace-uri(/*)" "$new_file")
 
 # Función para extraer valores con namespace
@@ -41,31 +40,34 @@ echo
 # Extraer y ordenar los registros de timestamp
 timestamps=$(xmlstarlet sel -N s="$ns" -t -m "//s:timestamp" -v "@date" -o " " -v "@time" -n "$new_file" | sort)
 
-# Obtener el último timestamp (el más reciente)
-last_timestamp=$(echo "$timestamps" | tail -n 1)
+# Mostrar todos los timestamps con su información
+echo "Timestamps y sus datos de uso de CPU:"
+echo "------------------------------------"
 
-# Mostrar el último timestamp
-echo "Último registro (timestamp):"
-echo "$last_timestamp"
-echo
+# Iterar sobre todos los timestamps ordenados
+while IFS= read -r timestamp; do
+    timestamp_date=$(echo "$timestamp" | awk '{print $1}')
+    timestamp_time=$(echo "$timestamp" | awk '{print $2}')
 
-# Extraer la fecha y hora del último timestamp
-timestamp_date=$(echo "$last_timestamp" | awk '{print $1}')
-timestamp_time=$(echo "$last_timestamp" | awk '{print $2}')
+    # Mostrar información del timestamp
+    echo "Fecha: $timestamp_date"
+    echo "Hora: $timestamp_time"
 
-# Mostrar la información de CPU del último timestamp
-echo "Uso de CPU para el timestamp $timestamp_date $timestamp_time:"
-cpu_user=$(get_value "//s:timestamp[@date='$timestamp_date' and @time='$timestamp_time']/s:cpu-load/s:cpu[@number='all']/@user")
-cpu_system=$(get_value "//s:timestamp[@date='$timestamp_date' and @time='$timestamp_time']/s:cpu-load/s:cpu[@number='all']/@system")
-cpu_nice=$(get_value "//s:timestamp[@date='$timestamp_date' and @time='$timestamp_time']/s:cpu-load/s:cpu[@number='all']/@nice")
-cpu_iowait=$(get_value "//s:timestamp[@date='$timestamp_date' and @time='$timestamp_time']/s:cpu-load/s:cpu[@number='all']/@iowait")
-cpu_steal=$(get_value "//s:timestamp[@date='$timestamp_date' and @time='$timestamp_time']/s:cpu-load/s:cpu[@number='all']/@steal")
-cpu_idle=$(get_value "//s:timestamp[@date='$timestamp_date' and @time='$timestamp_time']/s:cpu-load/s:cpu[@number='all']/@idle")
+    # Extraer los valores de CPU para ese timestamp
+    cpu_user=$(get_value "//s:timestamp[@date='$timestamp_date' and @time='$timestamp_time']/s:cpu-load/s:cpu[@number='all']/@user")
+    cpu_system=$(get_value "//s:timestamp[@date='$timestamp_date' and @time='$timestamp_time']/s:cpu-load/s:cpu[@number='all']/@system")
+    cpu_nice=$(get_value "//s:timestamp[@date='$timestamp_date' and @time='$timestamp_time']/s:cpu-load/s:cpu[@number='all']/@nice")
+    cpu_iowait=$(get_value "//s:timestamp[@date='$timestamp_date' and @time='$timestamp_time']/s:cpu-load/s:cpu[@number='all']/@iowait")
+    cpu_steal=$(get_value "//s:timestamp[@date='$timestamp_date' and @time='$timestamp_time']/s:cpu-load/s:cpu[@number='all']/@steal")
+    cpu_idle=$(get_value "//s:timestamp[@date='$timestamp_date' and @time='$timestamp_time']/s:cpu-load/s:cpu[@number='all']/@idle")
 
-echo "  User:   $cpu_user%"
-echo "  System: $cpu_system%"
-echo "  Nice:   $cpu_nice%"
-echo "  IOWait: $cpu_iowait%"
-echo "  Steal:  $cpu_steal%"
-echo "  Idle:   $cpu_idle%"
+    echo "  User:   $cpu_user%"
+    echo "  System: $cpu_system%"
+    echo "  Nice:   $cpu_nice%"
+    echo "  IOWait: $cpu_iowait%"
+    echo "  Steal:  $cpu_steal%"
+    echo "  Idle:   $cpu_idle%"
+    echo "------------------------------------"
+done <<< "$timestamps"
+
 echo "------------------------------------"
