@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Directorio donde se guardan los archivos
-LOG_DIR="/home/abian/abianlog"
+# Nuevo directorio donde se guardan los archivos
+LOG_DIR="/home/abian/archivos"
 BASE_FILE="abian"
 EXT=".xml"
 
@@ -38,20 +38,35 @@ echo "  Fecha: $(date -r "$new_file" "+%Y-%m-%d")"
 echo "  Hora:  $(date -r "$new_file" "+%H:%M:%S")"
 echo
 
-# Extraer los valores de CPU de todo el archivo
-cpu_user=$(get_value "//s:cpu-load/s:cpu[@number='all']/@user")
-cpu_system=$(get_value "//s:cpu-load/s:cpu[@number='all']/@system")
-cpu_nice=$(get_value "//s:cpu-load/s:cpu[@number='all']/@nice")
-cpu_iowait=$(get_value "//s:cpu-load/s:cpu[@number='all']/@iowait")
-cpu_steal=$(get_value "//s:cpu-load/s:cpu[@number='all']/@steal")
-cpu_idle=$(get_value "//s:cpu-load/s:cpu[@number='all']/@idle")
+# Extraer y ordenar los registros de timestamp
+timestamps=$(xmlstarlet sel -N s="$ns" -t -m "//s:timestamp" -v "@date" -o " " -v "@time" -n "$new_file" | sort)
 
-# Mostrar el resumen de la CPU
-echo "Uso de CPU:"
-echo "  User:   $cpu_user%"
-echo "  System: $cpu_system%"
-echo "  Nice:   $cpu_nice%"
-echo "  IOWait: $cpu_iowait%"
-echo "  Steal:  $cpu_steal%"
-echo "  Idle:   $cpu_idle%"
-echo "------------------------------------"
+# Obtener los últimos 5 timestamps (los más recientes)
+last_5_timestamps=$(echo "$timestamps" | tail -n 5)
+
+# Mostrar los últimos 5 timestamps
+echo "Últimos 5 registros (timestamps):"
+echo "$last_5_timestamps"
+echo
+
+# Mostrar la información de CPU de los últimos 5 timestamps
+for timestamp in $last_5_timestamps; do
+    timestamp_date=$(echo "$timestamp" | awk '{print $1}')
+    timestamp_time=$(echo "$timestamp" | awk '{print $2}')
+    
+    echo "Uso de CPU para el timestamp $timestamp_date $timestamp_time:"
+    cpu_user=$(get_value "//s:timestamp[@date='$timestamp_date' and @time='$timestamp_time']/s:cpu-load/s:cpu[@number='all']/@user")
+    cpu_system=$(get_value "//s:timestamp[@date='$timestamp_date' and @time='$timestamp_time']/s:cpu-load/s:cpu[@number='all']/@system")
+    cpu_nice=$(get_value "//s:timestamp[@date='$timestamp_date' and @time='$timestamp_time']/s:cpu-load/s:cpu[@number='all']/@nice")
+    cpu_iowait=$(get_value "//s:timestamp[@date='$timestamp_date' and @time='$timestamp_time']/s:cpu-load/s:cpu[@number='all']/@iowait")
+    cpu_steal=$(get_value "//s:timestamp[@date='$timestamp_date' and @time='$timestamp_time']/s:cpu-load/s:cpu[@number='all']/@steal")
+    cpu_idle=$(get_value "//s:timestamp[@date='$timestamp_date' and @time='$timestamp_time']/s:cpu-load/s:cpu[@number='all']/@idle")
+
+    echo "  User:   $cpu_user%"
+    echo "  System: $cpu_system%"
+    echo "  Nice:   $cpu_nice%"
+    echo "  IOWait: $cpu_iowait%"
+    echo "  Steal:  $cpu_steal%"
+    echo "  Idle:   $cpu_idle%"
+    echo "------------------------------------"
+done
